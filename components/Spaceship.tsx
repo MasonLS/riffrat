@@ -17,7 +17,8 @@ export default function Spaceship({ position, spaceship, team }: SpaceshipProps)
       style={{
         top: position?.mouseY,
         left: position?.mouseX,
-        position: "absolute"
+        position: "absolute",
+        userSelect: "none"
       }}
       id="spaceship-cursor">
       {position && <img style={{ width: 60 }} src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team.toLowerCase()}_${spaceship.type}.png`} />}
