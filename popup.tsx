@@ -1,4 +1,3 @@
-import { Storage } from "@plasmohq/storage"
 import { useEffect, useReducer, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 
@@ -6,8 +5,6 @@ import type { Team } from "./connect/Gamestate"
 import useSupabase from "./connect/usePayload"
 
 import "./style.css"
-
-const storage = new Storage()
 
 function IndexPopup() {
   const [active, setActive] = useState(false)

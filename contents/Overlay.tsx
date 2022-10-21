@@ -1,16 +1,12 @@
-import { Storage } from "@plasmohq/storage"
 import type { RealtimeChannel } from "@supabase/realtime-js"
 import type { PlasmoContentScript, PlasmoGetOverlayAnchor } from "plasmo"
 import { useCallback, useEffect, useLayoutEffect, useState } from "react"
-import { v4 as uuidv4 } from "uuid"
 
 import Spaceship from "../components/Spaceship"
 import type { Team } from "../connect/Gamestate"
 import useGamestate from "../connect/useGamestate"
 import usePayload from "../connect/usePayload"
 import client from "../core/store"
-
-const storage = new Storage()
 
 export const config: PlasmoContentScript = {
   matches: ["https://www.google.com/*"]
