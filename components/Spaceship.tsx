@@ -1,24 +1,29 @@
-import { useLayoutEffect } from "react"
+import { useEffect, useLayoutEffect, useState } from "react"
 import { text } from "stream/consumers"
+
+import "data-text:~/contents/overlay.css"
+
+//@ts-ignore
+import * as img from "../assets/spaceships/blue_01.png"
 
 interface SpaceshipProps {
   mouseX: number
   mouseY: number
-  text: string
+  id: string
 }
 
-export default function Spaceship({ mouseX, mouseY, text }: SpaceshipProps) {
+export default function Spaceship({ mouseX, mouseY, id }: SpaceshipProps) {
+  const [image, setImage] = useState()
+
   return (
     <div
       style={{
-        backgroundImage: "url(urlhere)",
         top: mouseY,
         left: mouseX,
-        position: "absolute",
-        fontSize: 58
+        position: "absolute"
       }}
       id="spaceship-cursor">
-      <div>{text}</div>
+      <img style={{ width: 80 }} src={img}></img>
     </div>
   )
 }

@@ -5,7 +5,7 @@ import useSupabase from "./connect/useConnect"
 import "./style.css"
 
 function IndexPopup() {
-  const [active, setActive] = useState(false)
+  const [active, setActive] = useState(true)
 
   const toggleActive = () => {
     chrome.tabs.query({}, (tabs) => {
