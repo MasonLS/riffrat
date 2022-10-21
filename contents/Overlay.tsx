@@ -8,8 +8,6 @@ import useGamestate from "../connect/useGamestate"
 import usePayload from "../connect/usePayload"
 import client from "../core/store"
 
-;("uuid")
-
 export const config: PlasmoContentScript = {
   matches: ["https://www.google.com/*"]
 }
