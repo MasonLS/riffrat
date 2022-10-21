@@ -1,8 +1,15 @@
-import { RealtimeClient } from '@supabase/realtime-js'
+import { createClient } from '@supabase/supabase-js';
 
-var client = new RealtimeClient(process.env.PLASMO_PUBLIC_SUPABASE_URL, {
-    params: { apikey: process.env.PLASMO_PUBLIC_SUPABASE_KEY },
-})
-client.connect()
+const client = createClient(
+    process.env.PLASMO_PUBLIC_SUPABASE_URL,
+    process.env.PLASMO_PUBLIC_SUPABASE_KEY,
+    {
+        realtime: {
+            params: {
+                eventsPerSecond: 10,
+            },
+        },
+    }
+)
 
-export default client;
+export default client
