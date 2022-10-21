@@ -13,7 +13,11 @@ export default function useGamestate(
   const createNewPlayer = (id: string, team: Team, spaceship: Spaceship) => {
     const player: GamePlayer = { id, team, spaceship }
 
-    setPlayers((players) => [...players, player])
+    setPlayers((players) =>
+      players.map((x) => x.id).includes(player.id)
+        ? players
+        : [...players, player]
+    )
 
     return player
   }

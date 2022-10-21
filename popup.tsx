@@ -1,23 +1,37 @@
+import { Storage } from "@plasmohq/storage"
 import { useEffect, useReducer, useState } from "react"
+import { v4 as uuidv4 } from "uuid"
 
+import type { Team } from "./connect/Gamestate"
 import useSupabase from "./connect/usePayload"
 
 import "./style.css"
 
+const storage = new Storage()
+
 function IndexPopup() {
-  const [active, setActive] = useState(true)
-  const [team, setTeam] = useState<"blue" | "green" | "orange" | "purple">()
+  const [active, setActive] = useState(false)
+  const [team, setTeam] = useState<Team>()
   const [ship, setShip] = useState<number>()
 
   const join = () => {
-    localStorage.setItem("playerTeam", team)
-    localStorage.setItem("playerShip", `${ship}`)
+    let uuid = localStorage.getItem("playerID")
+    if (!uuid) {
+      uuid = uuidv4()
+      localStorage.setItem("playerID", uuid)
+    }
     chrome.tabs.query({}, (tabs) => {
       tabs.forEach((tab) => {
-        chrome.tabs.sendMessage(tab.id, { active: true })
+        chrome.tabs.sendMessage(tab.id, {
+          active: true,
+          team,
+          ship,
+          id: uuid
+        })
       })
     })
     setActive(true)
+    window.close()
   }
 
   const leave = () => {
@@ -58,7 +72,7 @@ function IndexPopup() {
           <div className="flex flex-row">
             <div
               className="w-32 h-32 bg-green-400 cursor-pointer flex justify-center items-center"
-              onClick={() => setTeam("green")}>
+              onClick={() => setTeam("GREEN")}>
               <img
                 src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/green_01.png`}
                 alt=""
@@ -67,7 +81,7 @@ function IndexPopup() {
             </div>
             <div
               className="w-32 h-32  bg-orange-400 cursor-pointer flex justify-center items-center"
-              onClick={() => setTeam("orange")}>
+              onClick={() => setTeam("ORANGE")}>
               <img
                 src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/orange_01.png`}
                 alt=""
@@ -78,7 +92,7 @@ function IndexPopup() {
           <div className="flex flex-row">
             <div
               className="w-32 h-32  bg-blue-400 cursor-pointer flex justify-center items-center"
-              onClick={() => setTeam("blue")}>
+              onClick={() => setTeam("BLUE")}>
               <img
                 src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/blue_01.png`}
                 alt=""
@@ -87,7 +101,7 @@ function IndexPopup() {
             </div>
             <div
               className="w-32 h-32  bg-purple-400 cursor-pointer flex justify-center items-center"
-              onClick={() => setTeam("purple")}>
+              onClick={() => setTeam("PURPLE")}>
               <img
                 src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/purple_01.png`}
                 alt=""
@@ -98,13 +112,13 @@ function IndexPopup() {
         </div>
       )}
       {team && !ship && (
-        <div className={`bg-${team}-400`}>
+        <div className={`bg-${team.toLowerCase()}-400`}>
           <div className="flex flex-row">
             <div
               className="w-24 h-24 cursor-pointer flex justify-center items-center"
               onClick={() => setShip(1)}>
               <img
-                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team}_01.png`}
+                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team.toLowerCase()}_01.png`}
                 alt=""
                 className="w-12 h-12"
               />
@@ -113,7 +127,7 @@ function IndexPopup() {
               className="w-24 h-24 cursor-pointer flex justify-center items-center"
               onClick={() => setShip(2)}>
               <img
-                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team}_02.png`}
+                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team.toLowerCase()}_02.png`}
                 alt=""
                 className="w-12 h-12"
               />
@@ -122,7 +136,7 @@ function IndexPopup() {
               className="w-24 h-24 cursor-pointer flex justify-center items-center"
               onClick={() => setShip(3)}>
               <img
-                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team}_03.png`}
+                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team.toLowerCase()}_03.png`}
                 alt=""
                 className="w-12 h-12"
               />
@@ -133,7 +147,7 @@ function IndexPopup() {
               className="w-24 h-24 cursor-pointer flex justify-center items-center"
               onClick={() => setShip(4)}>
               <img
-                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team}_04.png`}
+                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team.toLowerCase()}_04.png`}
                 alt=""
                 className="w-12 h-12"
               />
@@ -142,7 +156,7 @@ function IndexPopup() {
               className="w-24 h-24 cursor-pointer flex justify-center items-center"
               onClick={() => setShip(5)}>
               <img
-                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team}_05.png`}
+                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team.toLowerCase()}_05.png`}
                 alt=""
                 className="w-12 h-12"
               />
@@ -151,7 +165,7 @@ function IndexPopup() {
               className="w-24 h-24 cursor-pointer flex justify-center items-center"
               onClick={() => setShip(6)}>
               <img
-                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team}_06.png`}
+                src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team.toLowerCase()}_06.png`}
                 alt=""
                 className="w-12 h-12"
               />

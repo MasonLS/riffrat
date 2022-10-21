@@ -21,7 +21,7 @@ export default function Spaceship({ position, spaceship, team }: SpaceshipProps)
         userSelect: "none"
       }}
       id="spaceship-cursor">
-      {position && <img style={{ width: 60 }} src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team.toLowerCase()}_${spaceship.type}.png`} />}
+      {position && <img style={{ width: 60 }} src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team.toLowerCase()}_0${spaceship.type}.png`} />}
     </div> : <div></div>
   
 }

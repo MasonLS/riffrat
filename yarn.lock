@@ -1162,6 +1162,13 @@
     lodash.clone "4.5.0"
     lodash.isequal "4.5.0"
 
+"@plasmohq/storage@^0.12.2":
+  version "0.12.2"
+  resolved "https://registry.yarnpkg.com/@plasmohq/storage/-/storage-0.12.2.tgz#ac06238d682f8dc886cdc7ba277c28e037d1ea0e"
+  integrity sha512-TF3EBqkRYVnLTE+qNW2BjMK572f6CL4MRtmEd4LJxpzRH3TrxTakjGDuBMhc3IfSCcNjSFsVzF+Qc/ZGgj1edQ==
+  dependencies:
+    webextension-polyfill "0.10.0"
+
 "@pnpm/network.ca-file@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@pnpm/network.ca-file/-/network.ca-file-1.0.1.tgz#16f88d057c68cd5419c1ef3dfa281296ea80b047"
@@ -4334,6 +4341,11 @@ weak-lru-cache@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/weak-lru-cache/-/weak-lru-cache-1.2.2.tgz#fdbb6741f36bae9540d12f480ce8254060dccd19"
   integrity sha512-DEAoo25RfSYMuTGc9vPJzZcZullwIqRDSI9LOy+fkCJPi6hykCnfKaXTuPBDuXAUcqHXyOgFtHNp/kB2FjYHbw==
+
+webextension-polyfill@0.10.0:
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/webextension-polyfill/-/webextension-polyfill-0.10.0.tgz#ccb28101c910ba8cf955f7e6a263e662d744dbb8"
+  integrity sha512-c5s35LgVa5tFaHhrZDnr3FpQpjj1BB+RXhLTYUxGqBVN460HkbM8TBtEqdXWbpTKfzwCcjAZVF7zXCYSKtcp9g==
 
 webidl-conversions@^3.0.0:
   version "3.0.1"

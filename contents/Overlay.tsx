@@ -1,48 +1,41 @@
+import { Storage } from "@plasmohq/storage"
 import type { RealtimeChannel } from "@supabase/realtime-js"
 import type { PlasmoContentScript, PlasmoGetOverlayAnchor } from "plasmo"
 import { useCallback, useEffect, useLayoutEffect, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 
 import Spaceship from "../components/Spaceship"
+import type { Team } from "../connect/Gamestate"
 import useGamestate from "../connect/useGamestate"
 import usePayload from "../connect/usePayload"
 import client from "../core/store"
+
+const storage = new Storage()
 
 export const config: PlasmoContentScript = {
   matches: ["https://www.google.com/*"]
 }
 
+interface UserSettings {
+  playerID: string
+  team: Team
+  spaceship: string
+}
+
 const Overlay = () => {
-  const [myID, setMyID] = useState<string>()
+  const [settings, setSettings] = useState<UserSettings>()
   const [channel, setChannel] = useState<RealtimeChannel>()
-  const [active, setActive] = useState(true)
+  const [active, setActive] = useState(false)
 
   const { createNewPlayer, move, players } = useGamestate(channel, active)
 
   useEffect(() => {
-    const uuid = "user" + uuidv4()
-    setMyID(uuid)
-
     const channel = client.channel("room1")
     setChannel(channel)
 
     // Subscribe registers your client with the server
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED") {
-        const { team, id, spaceship } = createNewPlayer(uuid, "BLUE", {
-          type: "03"
-        })
-
-        console.log("Broadcast join")
-
-        // Broadcast join
-        const data = { id, team, spaceship_type: spaceship.type }
-        channel.send({
-          type: "broadcast",
-          event: "join",
-          payload: data
-        })
-
         console.log("Adding listeners")
         // Add channel listeners
         // Receive join
@@ -68,7 +61,27 @@ const Overlay = () => {
 
     chrome.runtime.onMessage.addListener((msgObj) => {
       setActive(msgObj.active)
-      if (!active && channel) {
+      if (msgObj.active) {
+        console.log(msgObj)
+        setSettings({
+          playerID: msgObj.id,
+          spaceship: msgObj.ship,
+          team: msgObj.team
+        })
+        const uuid = msgObj.id
+        const { team, id, spaceship } = createNewPlayer(uuid, msgObj.team, {
+          type: msgObj.ship
+        })
+
+        console.log("Broadcast join")
+
+        // Broadcast join
+        const data = { id, team, spaceship_type: spaceship.type }
+        channel.send({
+          type: "broadcast",
+          event: "join",
+          payload: data
+        })
       }
     })
   }, [])
@@ -83,9 +96,9 @@ const Overlay = () => {
         const x = ev.pageX
         const y = ev.pageY
 
-        if (channel && myID) {
-          move(myID, x, y)
-          const data = { id: myID, x, y }
+        if (channel && settings.playerID) {
+          move(settings.playerID, x, y)
+          const data = { id: settings.playerID, x, y }
           channel.send({
             type: "broadcast",
             event: "move",
