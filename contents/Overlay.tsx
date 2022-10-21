@@ -35,6 +35,8 @@ const Overlay = () => {
           type: "03"
         })
 
+        console.log("Broadcast join")
+
         // Broadcast join
         const data = { id, team, spaceship_type: spaceship.type }
         channel.send({
@@ -43,17 +45,21 @@ const Overlay = () => {
           payload: data
         })
 
+        console.log("Adding listeners")
         // Add channel listeners
         // Receive join
         channel.on("broadcast", { event: "join" }, (payload) => {
-          if (active) {
+          if (active && payload.payload.id !== myID) {
             const data: any = payload.payload
+            console.log("Received join ", data.id)
             createNewPlayer(data.id, data.team, { type: data.spaceship_type })
           }
         })
+
         // Receive movement
         channel.on("broadcast", { event: "move" }, (payload) => {
           if (active) {
+            console.log("Received move")
             const data: any = payload.payload
             move(data.id, data.x, data.y)
           }
