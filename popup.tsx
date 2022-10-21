@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useState } from "react"
 
-import useSupabase from "./connect/useConnect"
+import useSupabase from "./connect/usePayload"
 
 import "./style.css"
 

@@ -1,10 +1,11 @@
 import type { RealtimeChannel } from "@supabase/realtime-js"
 import type { PlasmoContentScript, PlasmoGetOverlayAnchor } from "plasmo"
-import { useEffect, useLayoutEffect, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 
 import Spaceship from "../components/Spaceship"
 import useGamestate from "../connect/useGamestate"
+import usePayload from "../connect/usePayload"
 import client from "../core/store"
 
 ;("uuid")
@@ -18,23 +19,43 @@ const Overlay = () => {
   const [channel, setChannel] = useState<RealtimeChannel>()
   const [active, setActive] = useState(true)
 
-  const {} = useGamestate()
+  const { createNewPlayer, move, players } = useGamestate(channel, active)
 
   useEffect(() => {
-    setMyID("user" + uuidv4())
+    const uuid = "user" + uuidv4()
+    setMyID(uuid)
 
     const channel = client.channel("room1")
+    setChannel(channel)
 
     // Subscribe registers your client with the server
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED") {
-        setChannel(channel)
-        channel.on("broadcast", { event: "mouse-pos" }, (payload) => {
+        const { team, id, spaceship } = createNewPlayer(uuid, "BLUE", {
+          type: "03"
+        })
+
+        // Broadcast join
+        const data = { id, team, spaceship_type: spaceship.type }
+        channel.send({
+          type: "broadcast",
+          event: "join",
+          payload: data
+        })
+
+        // Add channel listeners
+        // Receive join
+        channel.on("broadcast", { event: "join" }, (payload) => {
           if (active) {
-            // setOtherMouseInfo({
-            //   mouseX: payload.payload.mouseX,
-            //   mouseY: payload.payload.mouseY
-            // })
+            const data: any = payload.payload
+            createNewPlayer(data.id, data.team, { type: data.spaceship_type })
+          }
+        })
+        // Receive movement
+        channel.on("broadcast", { event: "move" }, (payload) => {
+          if (active) {
+            const data: any = payload.payload
+            move(data.id, data.x, data.y)
           }
         })
       }
@@ -58,12 +79,14 @@ const Overlay = () => {
         const x = ev.pageX
         const y = ev.pageY
 
-        if (channel) {
-          // channel.send({
-          //   type: "broadcast",
-          //   event: "mouse-pos",
-          //   payload: { mouseX: x, mouseY: y }
-          // })
+        if (channel && myID) {
+          move(myID, x, y)
+          const data = { id: myID, x, y }
+          channel.send({
+            type: "broadcast",
+            event: "join",
+            payload: data
+          })
         }
       }
     }
@@ -71,7 +94,18 @@ const Overlay = () => {
 
   if (!active) return <></>
 
-  return <div></div>
+  return (
+    <div>
+      {players.map((x) => (
+        <Spaceship
+          key={x.id}
+          spaceship={x.spaceship}
+          position={x.cursor}
+          team={x.team}
+        />
+      ))}
+    </div>
+  )
 }
 
 export default Overlay
