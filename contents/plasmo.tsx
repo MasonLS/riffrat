@@ -64,7 +64,7 @@ const Overlay = () => {
       )}
       {otherMouseInfo && (
         <Spaceship
-          text="You"
+          text="Other"
           mouseX={otherMouseInfo.mouseX}
           mouseY={otherMouseInfo.mouseY}
         />
