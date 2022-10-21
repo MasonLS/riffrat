@@ -64,9 +64,9 @@ const Overlay = () => {
       setChannel(channel)
 
       // Subscribe registers your client with the server
-      channel.subscribe((status) => {
+      channel.subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
-          const stat = channel.track({
+          const stat = await channel.track({
             team: settings.team,
             spaceship: settings.spaceship
           })
