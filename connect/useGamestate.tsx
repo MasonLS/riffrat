@@ -4,10 +4,7 @@ import { useCallback, useState } from "react"
 
 import type { GamePlayer, MouseInfo, Spaceship, Team } from "./Gamestate"
 
-export default function useGamestate(
-  channel: RealtimeChannel,
-  active: boolean
-) {
+export default function useGamestate() {
   const [players, setPlayers] = useState<GamePlayer[]>([])
 
   const createNewPlayer = (id: string, team: Team, spaceship: Spaceship) => {
@@ -32,9 +29,14 @@ export default function useGamestate(
     )
   }
 
+  const removePlayer = (id: string) => {
+    setPlayers((players) => players.filter((x) => x.id !== id))
+  }
+
   return {
     players,
     createNewPlayer,
-    move
+    move,
+    removePlayer
   }
 }

@@ -7,7 +7,7 @@ import useSupabase from "./connect/usePayload"
 import "./style.css"
 
 function IndexPopup() {
-  const [active, setActive] = useState(false)
+  const [active, setActive] = useState(true)
   const [team, setTeam] = useState<Team>()
   const [ship, setShip] = useState<number>()
 

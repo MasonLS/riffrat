@@ -21,44 +21,14 @@ interface UserSettings {
 const Overlay = () => {
   const [settings, setSettings] = useState<UserSettings>()
   const [channel, setChannel] = useState<RealtimeChannel>()
-  const [active, setActive] = useState(false)
+  const [active, setActive] = useState(true)
 
-  const { createNewPlayer, move, players } = useGamestate(channel, active)
+  const { createNewPlayer, move, removePlayer, players } = useGamestate()
 
   useEffect(() => {
-    const channel = client.channel("room1")
-    setChannel(channel)
-
-    // Subscribe registers your client with the server
-    channel.subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        console.log("Adding listeners")
-        // Add channel listeners
-        // Receive join
-        channel.on("broadcast", { event: "join" }, (payload) => {
-          if (active && payload.payload.id) {
-            const data: any = payload.payload
-            console.log("Received join")
-            createNewPlayer(data.id, data.team, { type: data.spaceship_type })
-          }
-        })
-
-        // Receive movement
-        channel.on("broadcast", { event: "move" }, (payload) => {
-          if (active) {
-            console.log("Received move")
-            const data: any = payload.payload
-            move(data.id, data.x, data.y)
-          }
-        })
-      }
-    })
-    // Receive
-
     chrome.runtime.onMessage.addListener((msgObj) => {
       setActive(msgObj.active)
       if (msgObj.active) {
-        console.log(msgObj)
         setSettings({
           playerID: msgObj.id,
           spaceship: msgObj.ship,
@@ -82,11 +52,57 @@ const Overlay = () => {
     })
   }, [])
 
+  useEffect(() => {
+    if (settings?.playerID) {
+      const channel = client.channel("room1", {
+        config: {
+          presence: {
+            key: settings.playerID
+          }
+        }
+      })
+      setChannel(channel)
+
+      // Subscribe registers your client with the server
+      channel.subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          const stat = channel.track({
+            team: settings.team,
+            spaceship: settings.spaceship
+          })
+          console.log("Adding listeners")
+          // Add channel listeners
+
+          channel.on("presence", { event: "join" }, (event) => {
+            createNewPlayer(event.key, event.newPresences[0].team, {
+              type: event.newPresences[0].spaceship
+            })
+          })
+
+          channel.on("presence", { event: "leave" }, (event) => {
+            removePlayer(event.key)
+          })
+
+          // Receive movement
+          channel.on("broadcast", { event: "move" }, (payload) => {
+            if (active) {
+              console.log("Received move")
+              const data: any = payload.payload
+              move(data.id, data.x, data.y)
+            }
+          })
+        }
+      })
+      // Receive
+    }
+  }, [settings])
+
   useLayoutEffect(() => {
     document.querySelector("html").style.cursor = !active ? "auto" : "none"
   }, [active])
 
   useLayoutEffect(() => {
+    window.onunload = () => channel.socket.disconnect()
     window.onmousemove = (ev: MouseEvent) => {
       if (active) {
         const x = ev.pageX
