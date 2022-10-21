@@ -1,22 +1,19 @@
 import { useEffect, useReducer, useState } from "react"
 
-import useSupabase from "./connect/useSupabase"
+import useSupabase from "./connect/useConnect"
 
 import "./style.css"
 
-import client from "./core/store"
-
 function IndexPopup() {
-  const [message, setMessage] = useState("")
   const [active, setActive] = useState(false)
 
   const toggleActive = () => {
-    setActive(!active)
     chrome.tabs.query({}, (tabs) => {
       tabs.forEach((tab) => {
-        chrome.tabs.sendMessage(tab.id, { active })
+        chrome.tabs.sendMessage(tab.id, { active: !active })
       })
     })
+    setActive(!active)
   }
 
   return (

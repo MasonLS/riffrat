@@ -5,6 +5,10 @@ import { useEffect, useLayoutEffect, useState } from "react"
 import Spaceship from "../components/Spaceship"
 import client from "../core/store"
 
+export const config: PlasmoContentScript = {
+  matches: ["https://www.google.com/*"]
+}
+
 interface MouseInfo {
   mouseX: number
   mouseY: number
@@ -24,10 +28,12 @@ const Overlay = () => {
       if (status === "SUBSCRIBED") {
         setChannel(channel)
         channel.on("broadcast", { event: "mouse-pos" }, (payload) => {
-          setOtherMouseInfo({
-            mouseX: payload.payload.mouseX,
-            mouseY: payload.payload.mouseY
-          })
+          if (active) {
+            setOtherMouseInfo({
+              mouseX: payload.payload.mouseX,
+              mouseY: payload.payload.mouseY
+            })
+          }
         })
       }
     })
@@ -36,21 +42,25 @@ const Overlay = () => {
 
     chrome.runtime.onMessage.addListener((msgObj) => {
       setActive(msgObj.active)
+      if (!active && channel) {
+      }
     })
   }, [])
 
   useLayoutEffect(() => {
     document.querySelector("html").style.cursor = "none"
     window.onmousemove = (ev: MouseEvent) => {
-      const x = ev.pageX
-      const y = ev.pageY
-      setMyMouseInfo({ mouseX: x, mouseY: y })
-      if (channel) {
-        channel.send({
-          type: "broadcast",
-          event: "mouse-pos",
-          payload: { mouseX: x, mouseY: y }
-        })
+      if (active) {
+        const x = ev.pageX
+        const y = ev.pageY
+        setMyMouseInfo({ mouseX: x, mouseY: y })
+        if (channel) {
+          channel.send({
+            type: "broadcast",
+            event: "mouse-pos",
+            payload: { mouseX: x, mouseY: y }
+          })
+        }
       }
     }
   })
