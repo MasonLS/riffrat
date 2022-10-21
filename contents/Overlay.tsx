@@ -14,6 +14,7 @@ const Overlay = () => {
   const [myMouseInfo, setMyMouseInfo] = useState<MouseInfo>()
   const [otherMouseInfo, setOtherMouseInfo] = useState<MouseInfo>()
   const [channel, setChannel] = useState<RealtimeChannel>()
+  const [active, setActive] = useState(false)
 
   useEffect(() => {
     const channel = client.channel("room1")
@@ -32,6 +33,10 @@ const Overlay = () => {
     })
 
     // Receive
+
+    chrome.runtime.onMessage.addListener((msgObj) => {
+      setActive(msgObj.active)
+    })
   }, [])
 
   useLayoutEffect(() => {
@@ -49,6 +54,8 @@ const Overlay = () => {
       }
     }
   })
+
+  if (!active) return <></>
 
   return (
     <div>
