@@ -22,25 +22,18 @@ const Overlay = () => {
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED") {
         setChannel(channel)
+        console.log("HIIIIIi")
+        channel.on("broadcast", { event: "mouse-pos" }, (payload) => {
+          console.log(payload)
+          setOtherMouseInfo({
+            mouseX: payload.mouseX,
+            mouseY: payload.mouseY
+          })
+        })
       }
     })
 
     // Receive
-  }, [])
-
-  useEffect(() => {
-    if (channel) {
-      channel
-        .on("broadcast", { event: "mouse-pos" }, (payload) => {
-          console.log(payload)
-          setOtherMouseInfo({ mouseX: payload.mouseX, mouseY: payload.mouseY })
-        })
-        .subscribe((status) => {
-          if (status === "SUBSCRIBED") {
-            console.log("SUBSCRIBED!")
-          }
-        })
-    }
   }, [])
 
   useLayoutEffect(() => {
