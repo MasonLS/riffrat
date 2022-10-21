@@ -84,7 +84,7 @@ const Overlay = () => {
           const data = { id: myID, x, y }
           channel.send({
             type: "broadcast",
-            event: "join",
+            event: "move",
             payload: data
           })
         }
