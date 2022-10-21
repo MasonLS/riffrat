@@ -73,6 +73,13 @@ const Overlay = () => {
           console.log("Adding listeners")
           // Add channel listeners
 
+          channel.on("presence", { event: "sync" }, () => {
+            console.log(
+              "Online users: ",
+              JSON.stringify(channel.presenceState())
+            )
+          })
+
           channel.on("presence", { event: "join" }, (event) => {
             console.log("JOINED ", JSON.stringify(event))
             createNewPlayer(event.key, event.newPresences[0].team, {
