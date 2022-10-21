@@ -4,10 +4,7 @@ import { useEffect, useLayoutEffect, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 
 import Spaceship from "../components/Spaceship"
-import useGamestate from "../connect/useGamestate"
 import client from "../core/store"
-
-;("uuid")
 
 export const config: PlasmoContentScript = {
   matches: ["https://www.google.com/*"]
@@ -17,8 +14,6 @@ const Overlay = () => {
   const [myID, setMyID] = useState<string>()
   const [channel, setChannel] = useState<RealtimeChannel>()
   const [active, setActive] = useState(true)
-
-  const {} = useGamestate()
 
   useEffect(() => {
     setMyID("user" + uuidv4())
