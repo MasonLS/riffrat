@@ -49,9 +49,9 @@ const Overlay = () => {
         // Add channel listeners
         // Receive join
         channel.on("broadcast", { event: "join" }, (payload) => {
-          if (active && payload.payload.id !== myID) {
+          if (active && payload.payload.id) {
             const data: any = payload.payload
-            console.log("Received join ", data.id)
+            console.log("Received join")
             createNewPlayer(data.id, data.team, { type: data.spaceship_type })
           }
         })
