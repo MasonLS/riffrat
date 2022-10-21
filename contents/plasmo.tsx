@@ -32,11 +32,12 @@ const Overlay = () => {
     if (channel) {
       channel
         .on("broadcast", { event: "mouse-pos" }, (payload) => {
+          console.log(payload)
           setOtherMouseInfo({ mouseX: payload.mouseX, mouseY: payload.mouseY })
         })
         .subscribe((status) => {
           if (status === "SUBSCRIBED") {
-            // your callback function will now be called with the messages broadcast by the other client
+            console.log("SUBSCRIBED!")
           }
         })
     }
