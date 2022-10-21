@@ -26,8 +26,8 @@ const Overlay = () => {
         channel.on("broadcast", { event: "mouse-pos" }, (payload) => {
           console.log(payload)
           setOtherMouseInfo({
-            mouseX: payload.mouseX,
-            mouseY: payload.mouseY
+            mouseX: payload.payload.mouseX,
+            mouseY: payload.payload.mouseY
           })
         })
       }
@@ -57,14 +57,14 @@ const Overlay = () => {
     <div>
       {myMouseInfo && (
         <Spaceship
-          text="Flavio"
+          text="Me"
           mouseX={myMouseInfo.mouseX}
           mouseY={myMouseInfo.mouseY}
         />
       )}
       {otherMouseInfo && (
         <Spaceship
-          text="Mason"
+          text="You"
           mouseX={otherMouseInfo.mouseX}
           mouseY={otherMouseInfo.mouseY}
         />
