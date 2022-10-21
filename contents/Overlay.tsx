@@ -70,7 +70,7 @@ const Overlay = () => {
             team: settings.team,
             spaceship: settings.spaceship
           })
-          console.log("Adding listeners")
+          console.log("Adding listeners, TRACKED " + stat)
           // Add channel listeners
 
           channel.on("presence", { event: "sync" }, () => {
