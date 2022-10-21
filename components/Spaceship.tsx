@@ -3,25 +3,30 @@ import { text } from "stream/consumers"
 
 import "data-text:~/contents/overlay.css"
 
-import type { MouseInfo, Spaceship, Team } from "../connect/Gamestate"
-
 interface SpaceshipProps {
-  position: MouseInfo
-  spaceship: Spaceship
-  team: Team
+  position: { mouseX: number; mouseY: number }
+  ship: number
+  team: string
 }
 
-export default function Spaceship({ position, spaceship, team }: SpaceshipProps) {
-
-  return spaceship ? <div
+export default function Spaceship({ position, ship, team }: SpaceshipProps) {
+  return ship ? (
+    <div
       style={{
-        top: position?.mouseY,
-        left: position?.mouseX,
+        top: position.mouseY,
+        left: position.mouseX,
         position: "absolute",
         userSelect: "none"
       }}
       id="spaceship-cursor">
-      {position && <img style={{ width: 60 }} src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team.toLowerCase()}_0${spaceship.type}.png`} />}
-    </div> : <div></div>
-  
+      {position && (
+        <img
+          style={{ width: 60 }}
+          src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team}_0${ship}.png`}
+        />
+      )}
+    </div>
+  ) : (
+    <div></div>
+  )
 }
