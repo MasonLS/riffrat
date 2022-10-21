@@ -74,12 +74,14 @@ const Overlay = () => {
           // Add channel listeners
 
           channel.on("presence", { event: "join" }, (event) => {
+            console.log("JOINED ", JSON.stringify(event))
             createNewPlayer(event.key, event.newPresences[0].team, {
               type: event.newPresences[0].spaceship
             })
           })
 
           channel.on("presence", { event: "leave" }, (event) => {
+            console.log("LEFT", event.key)
             removePlayer(event.key)
           })
 
