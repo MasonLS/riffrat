@@ -51,12 +51,15 @@ const Overlay = () => {
             }
 
             channel.on("presence", { event: "sync" }, () => {
-              console.log(settings.playerID)
               console.log(
                 "Online users: ",
                 JSON.stringify(channel.presenceState())
               )
-              setPlayers(channel.presenceState()[settings.playerID])
+              const state = channel.presenceState()
+              const players = Object.keys(state).reduce((acc, key) => {
+                return acc.concat(state[key])
+              }, [])
+              setPlayers(players)
             })
           }
         })
