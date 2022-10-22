@@ -16,11 +16,13 @@ const Overlay = () => {
   const [settings, setSettings] = useState<any>()
   const [dead, setDead] = useState(false)
   const [channel, setChannel] = useState<any>()
+  const [winnerTeam, setWinnerTeam] = useState<string>()
   const lastClicked = useRef<number>(0)
   const canvasRef = useRef<HTMLCanvasElement>()
+  const cursor = useRef<number[]>()
 
   useEffect(() => {
-    console.log("Instance Ref: ", 4)
+    console.log("Instance Ref: ", 5)
     chrome.runtime.onMessage.addListener((msgObj) => {
       setActive(msgObj.active)
       setDead(false)
@@ -38,7 +40,7 @@ const Overlay = () => {
               key: settings.key
             },
             broadcast: {
-              self: true
+              self: false
             }
           }
         })
@@ -69,6 +71,18 @@ const Overlay = () => {
                   event: "cursor-pos",
                   payload: { id: settings.key, x, y }
                 })
+                setPlayers((players) =>
+                  players.map((p) =>
+                    p.key === settings.key
+                      ? {
+                          ...p,
+                          mouseX: x,
+                          mouseY: y
+                        }
+                      : p
+                  )
+                )
+                cursor.current = [x, y]
               }
             }
 
@@ -97,6 +111,9 @@ const Overlay = () => {
             })
 
             channel.on("broadcast", { event: "laser" }, (payload) => {
+              console.log(payload)
+              console.log(payload.payload.id === settings.key)
+              if (payload.payload.id === settings.key) return
               const canvas = canvasRef.current
               const ctx = canvas.getContext("2d")
               const rect = canvas.getBoundingClientRect()
@@ -104,19 +121,17 @@ const Overlay = () => {
               let y = payload.payload.y - rect.top
               let width = 1
               const growTimer = setInterval(() => {
-                if (width < 30) draw(ctx, x, y, width, payload.payload.team)
-                width += 2
+                if (width < 15) draw(ctx, x, y, width, payload.payload.team)
+                width += 1.2
                 if (width >= 45) {
                   clearInterval(growTimer)
                   if (
-                    payload.payload.team === "orange" ||
-                    payload.payload.team === "purple"
+                    settings.team === "orange" ||
+                    settings.team === "purple"
                   ) {
-                    killFirstInSight(x - 30, y, x, window.innerHeight)
-                    ctx.clearRect(x - 30, y, x, window.innerHeight)
+                    ctx.clearRect(x - 10, y + 20, 20, window.innerHeight)
                   } else {
-                    killFirstInSight(x - 30, 0, x, y)
-                    ctx.clearRect(x - 30, 0, x, y)
+                    ctx.clearRect(x - 10, 0, 20, y + 20)
                   }
                 }
               }, 10)
@@ -154,8 +169,6 @@ const Overlay = () => {
     })
   }, [])
 
-  console.log("PLAYERS, ", players)
-
   useLayoutEffect(() => {
     document.body.style.cursor = active ? "none" : "auto"
     document.body.style.userSelect = active ? "none" : "auto"
@@ -163,12 +176,12 @@ const Overlay = () => {
 
   const draw = (ctx, x: number, y: number, width: number, team: string) => {
     ctx.beginPath()
-    ctx.moveTo(x, y)
+    ctx.moveTo(x, team === "orange" || team === "purple" ? y + 20 : y + 20)
     ctx.lineTo(
       x,
       team === "orange" || team === "purple" ? window.innerHeight : 0
     )
-    ctx.strokeStyle = team
+    ctx.strokeStyle = getLaserColor(team)
     ctx.lineWidth = width
     ctx.stroke()
     ctx.closePath()
@@ -177,7 +190,7 @@ const Overlay = () => {
   const killFirstInSight = useCallback(
     (x1, y1, width, height) => {
       let playerKilled
-      const hitbox = 50
+      const hitbox = 40
       for (const player of players.filter((p) => p.team !== settings.team)) {
         if (
           player.mouseX >= x1 - hitbox &&
@@ -200,41 +213,102 @@ const Overlay = () => {
     [settings, players, channel]
   )
 
-  const click = useCallback(
-    (ev: any) => {
-      if (active && Date.now() - lastClicked.current > 1200) {
-        lastClicked.current = Date.now()
-        const canvas = ev.target as HTMLCanvasElement
-        const ctx = canvas.getContext("2d")
-        const rect = canvas.getBoundingClientRect()
-        let x = ev.pageX - rect.left
-        let y = ev.pageY - rect.top
-        let width = 1
-        ;(async () => {
-          channel?.send({
-            type: "broadcast",
-            event: "laser",
-            payload: { team: settings.team, x, y }
-          })
-        })()
-        const growTimer = setInterval(() => {
-          if (width < 30) draw(ctx, x, y, width, settings.team)
-          width += 2
-          if (width >= 45) {
-            clearInterval(growTimer)
-            if (settings.team === "orange" || settings.team === "purple") {
-              killFirstInSight(x - 30, y, x, window.innerHeight)
-              ctx.clearRect(x - 30, y, x, window.innerHeight)
-            } else {
-              killFirstInSight(x - 30, 0, x, y)
-              ctx.clearRect(x - 30, 0, x, y)
-            }
+  const keydown = useCallback(() => {
+    if (active && Date.now() - lastClicked.current > 1200) {
+      console.log("HIIII LASEEERR")
+      lastClicked.current = Date.now()
+      const canvas = canvasRef.current as HTMLCanvasElement
+      const ctx = canvas.getContext("2d")
+      const rect = canvas.getBoundingClientRect()
+      let x = cursor.current[0] - rect.left
+      let y = cursor.current[1] - rect.top
+      let width = 1
+      ;(async () => {
+        channel?.send({
+          type: "broadcast",
+          event: "laser",
+          payload: { id: settings.key, team: settings.team, x, y }
+        })
+      })()
+      const growTimer = setInterval(() => {
+        if (width < 15) draw(ctx, x, y, width, settings.team)
+        width += 2
+        if (width >= 45) {
+          clearInterval(growTimer)
+          if (settings.team === "orange" || settings.team === "purple") {
+            killFirstInSight(x - 15, y + 20, x, window.innerHeight)
+            ctx.clearRect(x - 10, y + 20, 20, window.innerHeight)
+          } else {
+            killFirstInSight(x - 15, 0, x, y + 20)
+            ctx.clearRect(x - 10, 0, 20, y + 20)
           }
-        }, 10)
+        }
+      }, 10)
+    }
+  }, [settings, players, channel])
+
+  useEffect(() => {
+    calculateWinner()
+  }, [players.length])
+
+  useLayoutEffect(() => {
+    window.onkeydown = (ev) => {
+      if (ev?.which === 32) {
+        ev.preventDefault()
+        keydown()
       }
-    },
-    [settings, players, channel]
-  )
+    }
+  })
+
+  const calculateWinner = useCallback(() => {
+    let winnerTeam
+    const teamMap = new Map<string, number>()
+    for (const player of players) {
+      if (teamMap.has(player.team))
+        teamMap.set(player.team, teamMap.get(player.team) + 1)
+      else teamMap.set(player.team, 1)
+    }
+    console.log(teamMap?.size)
+    if (teamMap.size >= 0) {
+      const sorted = Array.from(teamMap.keys()).sort(
+        (team1, team2) => teamMap.get(team2) - teamMap.get(team1)
+      )
+      console.log(sorted)
+      winnerTeam = sorted[0]
+      setWinnerTeam(winnerTeam)
+      console.log("Winner Team", winnerTeam)
+    }
+  }, [players])
+
+  const getBGColor = useCallback((team) => {
+    switch (team) {
+      case "purple":
+        return "#E97DB9"
+      case "green":
+        return "#C2E15F"
+      case "orange":
+        return "#FEB53A"
+      case "blue":
+        return "#2CE8F5"
+      default:
+        return "transparent"
+    }
+  }, [])
+
+  const getLaserColor = useCallback((team) => {
+    switch (team) {
+      case "purple":
+        return "#B55088"
+      case "green":
+        return "#637C20"
+      case "orange":
+        return "#E37100"
+      case "blue":
+        return "#0099DB"
+      default:
+        return "transparent"
+    }
+  }, [])
 
   return (
     <>
@@ -243,17 +317,17 @@ const Overlay = () => {
         <canvas
           id="battleCanvas"
           ref={canvasRef}
-          onClick={click}
+          onKeyDown={(ev) => console.log(ev.key)}
           height={window.innerHeight}
           width={window.innerWidth}
           style={{
             flex: 1,
             display: "block",
             opacity: 0.4,
-            backgroundColor: "black",
+            backgroundColor: getBGColor(winnerTeam),
             height: "100vh",
             width: "100vw",
-            cursor: "auto"
+            cursor: "none"
           }}
         />
       )}
