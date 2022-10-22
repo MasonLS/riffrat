@@ -10,6 +10,8 @@ import {
 import Spaceship from "../components/Spaceship"
 import client from "../core/store"
 
+import "../style.css"
+
 const Overlay = () => {
   const [active, setActive] = useState(false)
   const [players, setPlayers] = useState<any[]>([])
@@ -161,9 +163,8 @@ const Overlay = () => {
   }, [])
 
   useLayoutEffect(() => {
-    document.body.style.cursor = active ? "none" : "auto"
     document.body.style.userSelect = active ? "none" : "auto"
-  }, [active])
+  }, [active, dead])
 
   const draw = (
     ctx: CanvasRenderingContext2D,
@@ -187,11 +188,14 @@ const Overlay = () => {
   const killFirstInSight = useCallback(
     (x1, y1, width, height) => {
       let playerKilled
-      const hitbox = 20
+      const hitbox = 16
       for (const player of players.filter((p) => p.team !== settings.team)) {
+        console.log(
+          player.mouseX > x1 - hitbox && player.mouseX < x1 + width + hitbox
+        )
         if (
           player.mouseX >= x1 - hitbox &&
-          player.mouseX <= x1 + width + hitbox &&
+          player.mouseX <= width + hitbox &&
           player.mouseY >= Math.min(y1, height) - hitbox &&
           player.mouseY <= Math.max(y1, height) + hitbox
         ) {
@@ -309,7 +313,35 @@ const Overlay = () => {
 
   return (
     <>
-      {dead === true && <h1>YOU DIED!!1</h1>}
+      {!dead && (
+        <div
+          id="death-screen"
+          style={{
+            flex: 1,
+            display: "block",
+            backgroundColor: "black",
+            height: "100vh",
+            width: "100vw",
+            justifyContent: "center",
+            alignItems: "center",
+            overflow: "hidden"
+          }}>
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50vw",
+              transform: "translate(-50%, -50%)",
+              fontFamily: "Visitor TT2 BRK",
+              fontSize: 30,
+              textAlign: "center"
+            }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              You died!
+            </div>
+          </div>
+        </div>
+      )}
       {active && (
         <canvas
           id="battleCanvas"
