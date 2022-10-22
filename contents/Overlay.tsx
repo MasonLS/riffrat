@@ -17,9 +17,10 @@ const Overlay = () => {
   const [dead, setDead] = useState(false)
   const [channel, setChannel] = useState<any>()
   const lastClicked = useRef<number>(0)
+  const canvasRef = useRef<HTMLCanvasElement>()
 
   useEffect(() => {
-    console.log("Instance Ref: ", 3)
+    console.log("Instance Ref: ", 4)
     chrome.runtime.onMessage.addListener((msgObj) => {
       setActive(msgObj.active)
       setDead(false)
@@ -86,7 +87,6 @@ const Overlay = () => {
             })
 
             channel.on("broadcast", { event: "death" }, (payload) => {
-              console.log(payload.payload.id === settings.key)
               if (payload.payload.id === settings.key) {
                 setDead(true)
                 setActive(false)
@@ -94,6 +94,32 @@ const Overlay = () => {
               setPlayers((players) => {
                 return players.filter((p) => p.key !== payload.payload.id)
               })
+            })
+
+            channel.on("broadcast", { event: "laser" }, (payload) => {
+              const canvas = canvasRef.current
+              const ctx = canvas.getContext("2d")
+              const rect = canvas.getBoundingClientRect()
+              let x = payload.payload.x - rect.left
+              let y = payload.payload.y - rect.top
+              let width = 1
+              const growTimer = setInterval(() => {
+                if (width < 30) draw(ctx, x, y, width, payload.payload.team)
+                width += 2
+                if (width >= 45) {
+                  clearInterval(growTimer)
+                  if (
+                    payload.payload.team === "orange" ||
+                    payload.payload.team === "purple"
+                  ) {
+                    killFirstInSight(x - 30, y, x, window.innerHeight)
+                    ctx.clearRect(x - 30, y, x, window.innerHeight)
+                  } else {
+                    killFirstInSight(x - 30, 0, x, y)
+                    ctx.clearRect(x - 30, 0, x, y)
+                  }
+                }
+              }, 10)
             })
 
             channel.on("presence", { event: "sync" }, () => {
@@ -131,15 +157,18 @@ const Overlay = () => {
   console.log("PLAYERS, ", players)
 
   useLayoutEffect(() => {
-    document.body.style.cursor = "auto"
-    document.body.style.userSelect = "none"
-  })
+    document.body.style.cursor = active ? "none" : "auto"
+    document.body.style.userSelect = active ? "none" : "auto"
+  }, [active])
 
-  const draw = (ctx, x: number, y: number, width: number) => {
+  const draw = (ctx, x: number, y: number, width: number, team: string) => {
     ctx.beginPath()
     ctx.moveTo(x, y)
-    ctx.lineTo(x, settings.team === "orange" ? window.innerHeight : 0)
-    ctx.strokeStyle = settings.team
+    ctx.lineTo(
+      x,
+      team === "orange" || team === "purple" ? window.innerHeight : 0
+    )
+    ctx.strokeStyle = team
     ctx.lineWidth = width
     ctx.stroke()
     ctx.closePath()
@@ -181,12 +210,19 @@ const Overlay = () => {
         let x = ev.pageX - rect.left
         let y = ev.pageY - rect.top
         let width = 1
+        ;(async () => {
+          channel?.send({
+            type: "broadcast",
+            event: "laser",
+            payload: { team: settings.team, x, y }
+          })
+        })()
         const growTimer = setInterval(() => {
-          if (width < 30) draw(ctx, x, y, width)
+          if (width < 30) draw(ctx, x, y, width, settings.team)
           width += 2
           if (width >= 45) {
             clearInterval(growTimer)
-            if (settings.team === "orange") {
+            if (settings.team === "orange" || settings.team === "purple") {
               killFirstInSight(x - 30, y, x, window.innerHeight)
               ctx.clearRect(x - 30, y, x, window.innerHeight)
             } else {
@@ -206,6 +242,7 @@ const Overlay = () => {
       {active && (
         <canvas
           id="battleCanvas"
+          ref={canvasRef}
           onClick={click}
           height={window.innerHeight}
           width={window.innerWidth}

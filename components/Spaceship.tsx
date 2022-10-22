@@ -22,7 +22,7 @@ export default function Spaceship({ position, ship, team }: SpaceshipProps) {
         pointerEvents: "none",
         cursor: "none",
         zIndex: 9999,
-        transform: team === "orange" ? "scaleY(-1)" : ""
+        transform: team === "orange" || team === "purple" ? "scaleY(-1)" : ""
       }}
       id="spaceship-cursor">
       {position?.mouseX && position?.mouseY && (
