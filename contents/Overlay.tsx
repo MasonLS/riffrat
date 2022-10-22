@@ -111,15 +111,22 @@ const Overlay = () => {
 
             channel.on("broadcast", { event: "laser" }, (payload) => {
               if (payload.payload.id === settings.key) return
-              const canvas = canvasRef.current
+              const canvas = canvasRef.current as HTMLCanvasElement
               const ctx = canvas.getContext("2d")
               const rect = canvas.getBoundingClientRect()
-              let x = payload.payload.x - rect.left
-              let y = payload.payload.y - rect.top
+              let x = cursor.current[0] - rect.left
+              let y = cursor.current[1] - rect.top
               let width = 1
+              ;(async () => {
+                channel?.send({
+                  type: "broadcast",
+                  event: "laser",
+                  payload: { id: settings.key, team: settings.team, x, y }
+                })
+              })()
               const growTimer = setInterval(() => {
-                if (width < 15) draw(ctx, x, y, width, payload.payload.team)
-                width += 1.2
+                if (width < 15) draw(ctx, x, y, width, settings.team)
+                width += 2
                 if (width >= 45) {
                   clearInterval(growTimer)
                   if (
@@ -189,7 +196,7 @@ const Overlay = () => {
   const killFirstInSight = useCallback(
     (x1, y1, width, height) => {
       let playerKilled
-      const hitbox = 40
+      const hitbox = 65
       for (const player of players.filter((p) => p.team !== settings.team)) {
         if (
           player.mouseX >= x1 - hitbox &&
