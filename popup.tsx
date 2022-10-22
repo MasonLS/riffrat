@@ -58,8 +58,13 @@ function IndexPopup() {
 
   return (
     <div
-      className="flex flex-col min-w-10 p-0.5"
-      style={{ backgroundColor: "#12181F" }}>
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        padding: 10,
+        width: 300
+      }}
+      className="flex flex-column justify-center items-center">
       {!team && (
         <div className="flex flex-col gap-0.5">
           <div
