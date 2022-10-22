@@ -1,4 +1,3 @@
-import { add, invert, uniqBy } from "lodash"
 import {
   useCallback,
   useEffect,
@@ -35,7 +34,7 @@ const Overlay = () => {
       }
       setSettings(settings)
 
-      const channel = client.channel(window.location.href, {
+      const nextChannel = client.channel(window.location.href, {
         config: {
           presence: {
             key: settings.key
@@ -45,7 +44,7 @@ const Overlay = () => {
           }
         }
       })
-      setChannel(channel)
+      setChannel(nextChannel)
 
       // Subscribe registers your client with the server
       channel.subscribe(async (status) => {
@@ -155,7 +154,7 @@ const Overlay = () => {
         }
       })
     }
-  }, [])
+  }, [window.location.href])
 
   useEffect(() => {
     chrome.runtime.onMessage.addListener((msgObj) => {
