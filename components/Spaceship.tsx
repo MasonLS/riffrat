@@ -5,11 +5,13 @@ import "data-text:~/contents/overlay.css"
 
 interface SpaceshipProps {
   position: { mouseX: number; mouseY: number }
-  ship: number
+  ship: any
   team: string
 }
 
 export default function Spaceship({ position, ship, team }: SpaceshipProps) {
+  console.log(position)
+  console.log(ship)
   return ship ? (
     <div
       style={{

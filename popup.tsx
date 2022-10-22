@@ -1,14 +1,15 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 
 import "./style.css"
 
 function IndexPopup() {
-  const [active, setActive] = useState(true)
+  const [active, setActive] = useState(false)
   const [team, setTeam] = useState<string>()
   const [ship, setShip] = useState<number>()
 
-  const join = () => {
+  const join = (close = true) => {
+    localStorage.setItem("gameActive", "true")
     let uuid = localStorage.getItem("playerID")
     if (!uuid) {
       uuid = uuidv4()
@@ -25,10 +26,11 @@ function IndexPopup() {
       })
     })
     setActive(true)
-    window.close()
+    if (close) window.close()
   }
 
   const leave = () => {
+    localStorage.setItem("gameActive", "false")
     chrome.tabs.query({}, (tabs) => {
       tabs.forEach((tab) => {
         chrome.tabs.sendMessage(tab.id, { active: false })
@@ -169,7 +171,9 @@ function IndexPopup() {
       )}
       {team && ship && (
         <div>
-          <button onClick={join} className="bg-black text-white w-full text-lg">
+          <button
+            onClick={() => join()}
+            className="bg-black text-white w-full text-lg">
             JOIN FIGHT
           </button>
         </div>

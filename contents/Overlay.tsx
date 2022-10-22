@@ -1,3 +1,4 @@
+import { uniq } from "lodash"
 import { useEffect, useState } from "react"
 
 import Spaceship from "../components/Spaceship"
@@ -56,9 +57,11 @@ const Overlay = () => {
                 JSON.stringify(channel.presenceState())
               )
               const state = channel.presenceState()
-              const players = Object.keys(state).reduce((acc, key) => {
-                return acc.concat(state[key])
-              }, [])
+              const keys = uniq(Object.keys(state))
+              const players = keys.reduce(
+                (acc, key) => acc.concat(state[key]),
+                []
+              )
               setPlayers(players)
             })
           }
