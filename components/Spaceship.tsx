@@ -3,6 +3,8 @@ import { text } from "stream/consumers"
 
 import "data-text:~/contents/overlay.css"
 
+import { transform } from "lodash"
+
 interface SpaceshipProps {
   position: { mouseX: number; mouseY: number }
   ship: any
@@ -16,7 +18,11 @@ export default function Spaceship({ position, ship, team }: SpaceshipProps) {
         top: position.mouseY,
         left: position.mouseX,
         position: "absolute",
-        userSelect: "none"
+        userSelect: "none",
+        pointerEvents: "none",
+        cursor: "none",
+        zIndex: 9999,
+        transform: team === "orange" ? "scaleY(-1)" : ""
       }}
       id="spaceship-cursor">
       {position?.mouseX && position?.mouseY && (

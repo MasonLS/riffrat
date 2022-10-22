@@ -10,10 +10,10 @@ function IndexPopup() {
 
   const join = (close = true) => {
     localStorage.setItem("gameActive", "true")
-    let uuid = localStorage.getItem("playerID")
+    let uuid = localStorage.getItem("key")
     if (!uuid) {
       uuid = uuidv4()
-      localStorage.setItem("playerID", uuid)
+      localStorage.setItem("key", uuid)
     }
     chrome.tabs.query({}, (tabs) => {
       tabs.forEach((tab) => {
