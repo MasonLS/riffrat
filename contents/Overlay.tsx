@@ -20,7 +20,7 @@ const Overlay = () => {
   const canvasRef = useRef<HTMLCanvasElement>()
 
   useEffect(() => {
-    console.log("Instance Ref: ", 3)
+    console.log("Instance Ref: ", 4)
     chrome.runtime.onMessage.addListener((msgObj) => {
       setActive(msgObj.active)
       setDead(false)
