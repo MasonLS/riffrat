@@ -164,7 +164,7 @@ const Overlay = () => {
         channel?.send({
           type: "broadcast",
           event: "death",
-          payload: { id: settings.key }
+          payload: { id: playerKilled.key }
         })
       }
     },
