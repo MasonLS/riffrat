@@ -147,7 +147,7 @@ const Overlay = () => {
     (x1, y1, width, height) => {
       let playerKilled
       const hitbox = 50
-      for (const player of players) {
+      for (const player of players.filter((p) => p.team !== settings.team)) {
         if (
           player.mouseX >= x1 - hitbox &&
           player.mouseX <= width + hitbox &&
@@ -158,11 +158,13 @@ const Overlay = () => {
           break
         }
       }
-      channel?.send({
-        type: "broadcast",
-        event: "death",
-        payload: { id: settings.key }
-      })
+      if (playerKilled) {
+        channel?.send({
+          type: "broadcast",
+          event: "death",
+          payload: { id: settings.key }
+        })
+      }
     },
     [settings, players, channel]
   )
