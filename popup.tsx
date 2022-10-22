@@ -61,8 +61,9 @@ function IndexPopup() {
         display: "flex",
         flexDirection: "column",
         padding: 10,
-        width: 400
-      }}>
+        width: 300
+      }}
+      className="flex flex-column justify-center items-center">
       {!team && (
         <div>
           <div className="flex flex-row">

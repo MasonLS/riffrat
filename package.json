@@ -1,9 +1,9 @@
 {
-  "name": "bruh",
-  "displayName": "Bruh",
+  "name": "shoottheweb",
+  "displayName": "Shoot The Web",
   "version": "0.0.0",
-  "description": "A basic Plasmo extension.",
-  "author": "jessica",
+  "description": "Join the fight for the future of the web!",
+  "author": "flavio",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build"
