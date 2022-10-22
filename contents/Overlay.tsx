@@ -34,7 +34,7 @@ const Overlay = () => {
       }
       setSettings(settings)
 
-      const nextChannel = client.channel(window.location.href, {
+      const channel = client.channel(window.location.href, {
         config: {
           presence: {
             key: settings.key
@@ -44,7 +44,7 @@ const Overlay = () => {
           }
         }
       })
-      setChannel(nextChannel)
+      setChannel(channel)
 
       // Subscribe registers your client with the server
       channel.subscribe(async (status) => {
