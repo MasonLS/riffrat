@@ -313,7 +313,7 @@ const Overlay = () => {
 
   return (
     <>
-      {!dead && (
+      {dead && (
         <div
           id="death-screen"
           style={{
