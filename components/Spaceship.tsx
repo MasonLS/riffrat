@@ -10,8 +10,6 @@ interface SpaceshipProps {
 }
 
 export default function Spaceship({ position, ship, team }: SpaceshipProps) {
-  console.log(position)
-  console.log(ship)
   return ship ? (
     <div
       style={{

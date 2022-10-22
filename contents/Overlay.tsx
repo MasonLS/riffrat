@@ -21,6 +21,7 @@ const Overlay = () => {
 
         const channel = client.channel(window.location.href, {
           config: {
+            broadcast: { self: true, ack: true },
             presence: {
               key: settings.playerID
             }
@@ -29,6 +30,7 @@ const Overlay = () => {
 
         // Subscribe registers your client with the server
         channel.subscribe(async (status) => {
+          console.log(status)
           if (status === "SUBSCRIBED") {
             channel.track({
               team: settings.team,
@@ -58,9 +60,25 @@ const Overlay = () => {
                   JSON.stringify(channel.presenceState())
                 )
                 const state = channel.presenceState()
-                const players = uniqBy(Object.values(state).flat(), "key")
-                console.log("PLAYERS ", players)
-                setPlayers(players)
+                console.log(
+                  "PLAYERS ",
+                  uniqBy(state[settings.playerID], "presence_ref")
+                )
+                setPlayers([
+                  ...uniqBy(
+                    state[settings.playerID].filter(
+                      (x) => x.key !== settings.playerID
+                    ),
+                    "presence_ref"
+                  ),
+                  state[settings.playerID].filter(
+                    (x) => x.key === settings.playerID
+                  )[
+                    state[settings.playerID].filter(
+                      (x) => x.key === settings.playerID
+                    ).length
+                  ]
+                ])
               })
               .subscribe()
           }
