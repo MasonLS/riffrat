@@ -3,7 +3,7 @@
   "displayName": "Shoot The Web",
   "version": "0.0.0",
   "description": "Join the fight for the future of the web!",
-  "author": "flavio",
+  "author": "AE Studio",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build"

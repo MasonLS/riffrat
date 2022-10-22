@@ -9,8 +9,21 @@ function IndexPopup() {
   const [team, setTeam] = useState<string>()
   const [ship, setShip] = useState<number>()
 
+  useEffect(() => {
+    const gameActive = localStorage.getItem("gameActive")
+    setActive(gameActive === "true")
+    if (gameActive === "true") {
+      const playerTeam = localStorage.getItem("playerTeam")
+      const playerShip = localStorage.getItem("playerShip")
+      setTeam(playerTeam)
+      setShip(+playerShip)
+    }
+  }, [active])
+
   const join = (close = true) => {
     localStorage.setItem("gameActive", "true")
+    localStorage.setItem("playerTeam", team)
+    localStorage.setItem("playerShip", ship)
     let uuid = localStorage.getItem("key")
     if (!uuid) {
       uuid = uuidv4()
@@ -32,6 +45,8 @@ function IndexPopup() {
 
   const leave = () => {
     localStorage.setItem("gameActive", "false")
+    setTeam(null)
+    setShip(null)
     chrome.tabs.query({}, (tabs) => {
       tabs.forEach((tab) => {
         chrome.tabs.sendMessage(tab.id, { active: false })
@@ -40,27 +55,54 @@ function IndexPopup() {
     setActive(false)
   }
 
-  if (active) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          padding: 10,
-          width: 400
-        }}>
-        <button onClick={leave} className="bg-black text-white w-full text-lg">
-          LEAVE FIGHT
-        </button>
-      </div>
-    )
-  }
-
   return (
     <div
       className="flex flex-col min-w-10 p-0.5"
       style={{ backgroundColor: "#12181F" }}>
-      {!team && (
+      {active && (
+        <div
+          className={classNames(
+            "flex flex-col justify-center items-center p-10",
+            `bg-${team}-400`
+          )}>
+          <div
+            style={{
+              fontFamily: "Visitor TT2 BRK",
+              fontSize: 30,
+              textAlign: "center"
+            }}>
+            "FIGHT!"
+          </div>
+          <div
+            className={classNames(
+              "w-32 h-32 cursor-pointer flex justify-center items-center",
+              `bg-${team}-400`
+            )}>
+            <img
+              src={`https://gfderspnyufytfnpxnsb.supabase.co/storage/v1/object/public/ships/${team}_0${ship}.png`}
+              alt=""
+              className={classNames("w-20 h-20", {
+                "-scale-y-100": team === "orange" || team === "purple"
+              })}
+            />
+          </div>
+          <button
+            onClick={() => leave()}
+            className="bg-black text-white w-full text-lg">
+            <div
+              style={{
+                fontFamily: "Visitor TT2 BRK",
+                fontSize: 24,
+                textAlign: "center",
+                width: 200,
+                padding: 10
+              }}>
+              LEAVE GAME
+            </div>
+          </button>
+        </div>
+      )}
+      {!active && !team && (
         <div className="flex flex-col gap-0.5">
           <div
             style={{
@@ -113,7 +155,7 @@ function IndexPopup() {
           </div>
         </div>
       )}
-      {team && !ship && (
+      {!active && team && !ship && (
         <div
           className="flex flex-col gap-0.5"
           style={{ backgroundColor: "#12181F" }}>
@@ -216,7 +258,7 @@ function IndexPopup() {
           </div>
         </div>
       )}
-      {team && ship && (
+      {!active && team && ship && (
         <div
           className={classNames(
             "flex flex-col justify-center items-center p-10",
@@ -228,7 +270,7 @@ function IndexPopup() {
               fontSize: 30,
               textAlign: "center"
             }}>
-            READY ?
+            "READY"
           </div>
           <div
             className={classNames(
