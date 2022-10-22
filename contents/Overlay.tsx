@@ -1,4 +1,4 @@
-import { uniqBy } from "lodash"
+import { add, uniqBy } from "lodash"
 import { useEffect, useLayoutEffect, useState } from "react"
 
 import Spaceship from "../components/Spaceship"
@@ -9,12 +9,13 @@ const Overlay = () => {
   const [players, setPlayers] = useState<any[]>([])
 
   useEffect(() => {
+    console.log("Instance Ref: ", 3)
     chrome.runtime.onMessage.addListener((msgObj) => {
       setActive(msgObj.active)
 
       if (msgObj.active) {
         const settings = {
-          playerID: msgObj.id,
+          key: msgObj.id,
           ship: msgObj.ship,
           team: msgObj.team
         }
@@ -22,18 +23,20 @@ const Overlay = () => {
         const channel = client.channel(window.location.href, {
           config: {
             presence: {
-              key: settings.playerID
+              key: settings.key
             }
           }
         })
 
         // Subscribe registers your client with the server
-        channel.subscribe(async (status) => {
+        channel.subscribe(async (status, err) => {
           if (status === "SUBSCRIBED") {
+            console.log("Error, ", err)
             channel.track({
               team: settings.team,
               ship: settings.ship,
-              playerID: settings.playerID
+              key: settings.key,
+              updated_at: Date.now()
             })
 
             window.onmousemove = (ev: MouseEvent) => {
@@ -44,9 +47,10 @@ const Overlay = () => {
                 channel.track({
                   team: settings.team,
                   ship: settings.ship,
-                  key: settings.playerID,
+                  key: settings.key,
                   mouseX: x,
-                  mouseY: y
+                  mouseY: y,
+                  updated_at: Date.now()
                 })
               }
             }
@@ -58,9 +62,20 @@ const Overlay = () => {
                   JSON.stringify(channel.presenceState())
                 )
                 const state = channel.presenceState()
-                const players = uniqBy(Object.values(state).flat(), "key")
-                console.log("PLAYERS ", players)
-                setPlayers(players)
+                const addPlayers = new Map<string, any>()
+                const presenceArray = Object.values(state).flat()
+                presenceArray.forEach((presence) => {
+                  if (
+                    addPlayers.has(presence.key) &&
+                    addPlayers.get(presence.key).updated_at <
+                      presence.updated_at
+                  ) {
+                    addPlayers.set(presence.key, presence)
+                  } else if (!addPlayers.has(presence.key)) {
+                    addPlayers.set(presence.key, presence)
+                  }
+                })
+                setPlayers(Array.from(addPlayers.values()))
               })
               .subscribe()
           }
