@@ -6,7 +6,7 @@ const client = createClient(
   {
     realtime: {
       params: {
-        eventsPerSecond: 100
+        eventsPerSecond: 1000
       }
     }
   }
