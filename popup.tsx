@@ -23,7 +23,7 @@ function IndexPopup() {
   const join = (close = true) => {
     localStorage.setItem("gameActive", "true")
     localStorage.setItem("playerTeam", team)
-    localStorage.setItem("playerShip", ship)
+    localStorage.setItem("playerShip", ship.toString())
     let uuid = localStorage.getItem("key")
     if (!uuid) {
       uuid = uuidv4()

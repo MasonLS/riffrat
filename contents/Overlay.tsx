@@ -11,7 +11,7 @@ import Spaceship from "../components/Spaceship"
 import client from "../core/store"
 
 const Overlay = () => {
-  const [active, setActive] = useState(true)
+  const [active, setActive] = useState(false)
   const [players, setPlayers] = useState<any[]>([])
   const [settings, setSettings] = useState<any>()
   const [dead, setDead] = useState(false)
@@ -22,9 +22,9 @@ const Overlay = () => {
   const cursor = useRef<number[]>()
 
   useEffect(() => {
-    console.log("Instance Ref: ", 5)
     chrome.runtime.onMessage.addListener((msgObj) => {
       setActive(msgObj.active)
+      console.log(msgObj.active)
       setDead(false)
       if (msgObj.active) {
         const settings = {
@@ -49,7 +49,6 @@ const Overlay = () => {
         // Subscribe registers your client with the server
         channel.subscribe(async (status, err) => {
           if (status === "SUBSCRIBED") {
-            console.log("Error, ", err)
             channel.track({
               team: settings.team,
               ship: settings.ship,
@@ -62,7 +61,7 @@ const Overlay = () => {
             }
 
             window.onmousemove = (ev: MouseEvent) => {
-              if (active) {
+              if (msgObj.active) {
                 const x = ev.pageX
                 const y = ev.pageY
 
@@ -111,8 +110,6 @@ const Overlay = () => {
             })
 
             channel.on("broadcast", { event: "laser" }, (payload) => {
-              console.log(payload)
-              console.log(payload.payload.id === settings.key)
               if (payload.payload.id === settings.key) return
               const canvas = canvasRef.current
               const ctx = canvas.getContext("2d")
@@ -138,10 +135,6 @@ const Overlay = () => {
             })
 
             channel.on("presence", { event: "sync" }, () => {
-              // console.log(
-              //   "Online users: ",
-              //   JSON.stringify(channel.presenceState())
-              // )
               const state = channel.presenceState()
               const addPlayers = new Map<string, any>()
               const presenceArray = Object.values(state).flat()
@@ -174,7 +167,13 @@ const Overlay = () => {
     document.body.style.userSelect = active ? "none" : "auto"
   }, [active])
 
-  const draw = (ctx, x: number, y: number, width: number, team: string) => {
+  const draw = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    team: string
+  ) => {
     ctx.beginPath()
     ctx.moveTo(x, team === "orange" || team === "purple" ? y + 20 : y + 20)
     ctx.lineTo(
@@ -215,7 +214,6 @@ const Overlay = () => {
 
   const keydown = useCallback(() => {
     if (active && Date.now() - lastClicked.current > 1200) {
-      console.log("HIIII LASEEERR")
       lastClicked.current = Date.now()
       const canvas = canvasRef.current as HTMLCanvasElement
       const ctx = canvas.getContext("2d")
@@ -253,12 +251,12 @@ const Overlay = () => {
 
   useLayoutEffect(() => {
     window.onkeydown = (ev) => {
-      if (ev?.which === 32) {
+      if (ev?.which === 32 && active) {
         ev.preventDefault()
         keydown()
       }
     }
-  })
+  }, [active, settings])
 
   const calculateWinner = useCallback(() => {
     let winnerTeam
@@ -268,28 +266,25 @@ const Overlay = () => {
         teamMap.set(player.team, teamMap.get(player.team) + 1)
       else teamMap.set(player.team, 1)
     }
-    console.log(teamMap?.size)
     if (teamMap.size >= 0) {
       const sorted = Array.from(teamMap.keys()).sort(
         (team1, team2) => teamMap.get(team2) - teamMap.get(team1)
       )
-      console.log(sorted)
       winnerTeam = sorted[0]
       setWinnerTeam(winnerTeam)
-      console.log("Winner Team", winnerTeam)
     }
   }, [players])
 
   const getBGColor = useCallback((team) => {
     switch (team) {
       case "purple":
-        return "#E97DB9"
+        return "233,125,185"
       case "green":
-        return "#C2E15F"
+        return "194,225,95"
       case "orange":
-        return "#FEB53A"
+        return "254,181,58"
       case "blue":
-        return "#2CE8F5"
+        return "44,232,245"
       default:
         return "transparent"
     }
@@ -317,14 +312,12 @@ const Overlay = () => {
         <canvas
           id="battleCanvas"
           ref={canvasRef}
-          onKeyDown={(ev) => console.log(ev.key)}
           height={window.innerHeight}
           width={window.innerWidth}
           style={{
             flex: 1,
             display: "block",
-            opacity: 0.4,
-            backgroundColor: getBGColor(winnerTeam),
+            backgroundColor: "rgba(" + getBGColor(winnerTeam) + ",0.5)",
             height: "100vh",
             width: "100vw",
             cursor: "none"
@@ -332,14 +325,15 @@ const Overlay = () => {
         />
       )}
 
-      {players.map((x) => (
-        <Spaceship
-          key={x.key}
-          ship={x.ship}
-          position={{ mouseX: x.mouseX, mouseY: x.mouseY }}
-          team={x.team}
-        />
-      ))}
+      {active &&
+        players.map((x) => (
+          <Spaceship
+            key={x.key}
+            ship={x.ship}
+            position={{ mouseX: x.mouseX, mouseY: x.mouseY }}
+            team={x.team}
+          />
+        ))}
     </>
   )
 }
