@@ -24,6 +24,9 @@ const Overlay = () => {
           config: {
             presence: {
               key: settings.key
+            },
+            broadcast: {
+              self: true
             }
           }
         })
@@ -39,45 +42,60 @@ const Overlay = () => {
               updated_at: Date.now()
             })
 
+            window.onclick = (ev: MouseEvent) => {
+              ev.preventDefault()
+              console.log("Hi")
+            }
+
             window.onmousemove = (ev: MouseEvent) => {
               if (active) {
                 const x = ev.pageX
                 const y = ev.pageY
 
-                channel.track({
-                  team: settings.team,
-                  ship: settings.ship,
-                  key: settings.key,
-                  mouseX: x,
-                  mouseY: y,
-                  updated_at: Date.now()
+                console.log("Sent!")
+                channel.send({
+                  type: "broadcast",
+                  event: "cursor-pos",
+                  payload: { id: settings.key, x, y }
                 })
               }
             }
 
-            channel
-              .on("presence", { event: "sync" }, () => {
-                console.log(
-                  "Online users: ",
-                  JSON.stringify(channel.presenceState())
+            channel.on("broadcast", { event: "cursor-pos" }, (payload) => {
+              console.log(payload.payload.x)
+              setPlayers((players) => {
+                return players.map((p) =>
+                  p.key === payload.payload.key
+                    ? {
+                        ...p,
+                        mouseX: payload.payload.x,
+                        mouseY: payload.payload.y
+                      }
+                    : p
                 )
-                const state = channel.presenceState()
-                const addPlayers = new Map<string, any>()
-                const presenceArray = Object.values(state).flat()
-                presenceArray.forEach((presence) => {
-                  if (
-                    addPlayers.has(presence.key) &&
-                    addPlayers.get(presence.key).updated_at <
-                      presence.updated_at
-                  ) {
-                    addPlayers.set(presence.key, presence)
-                  } else if (!addPlayers.has(presence.key)) {
-                    addPlayers.set(presence.key, presence)
-                  }
-                })
-                setPlayers(Array.from(addPlayers.values()))
               })
-              .subscribe()
+            })
+
+            channel.on("presence", { event: "sync" }, () => {
+              console.log(
+                "Online users: ",
+                JSON.stringify(channel.presenceState())
+              )
+              const state = channel.presenceState()
+              const addPlayers = new Map<string, any>()
+              const presenceArray = Object.values(state).flat()
+              presenceArray.forEach((presence) => {
+                if (
+                  addPlayers.has(presence.key) &&
+                  addPlayers.get(presence.key).updated_at < presence.updated_at
+                ) {
+                  addPlayers.set(presence.key, presence)
+                } else if (!addPlayers.has(presence.key)) {
+                  addPlayers.set(presence.key, presence)
+                }
+              })
+              setPlayers(Array.from(addPlayers.values()))
+            })
           }
         })
       }
