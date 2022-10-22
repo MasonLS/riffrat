@@ -3,3 +3,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: "Visitor TT2 BRK";
+  src: url("assets/visitor2.ttf") format("truetype");
+}
