@@ -128,6 +128,8 @@ const Overlay = () => {
     })
   }, [])
 
+  console.log("PLAYERS, ", players)
+
   useLayoutEffect(() => {
     document.body.style.cursor = "auto"
     document.body.style.userSelect = "none"
