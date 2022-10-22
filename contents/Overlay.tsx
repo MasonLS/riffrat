@@ -131,14 +131,19 @@ const Overlay = () => {
   console.log("PLAYERS, ", players)
 
   useLayoutEffect(() => {
-    document.body.style.cursor = "auto"
-    document.body.style.userSelect = "none"
-  })
+    document.body.style.cursor = active ? "none" : "auto"
+    document.body.style.userSelect = active ? "none" : "auto"
+  }, [active])
 
   const draw = (ctx, x: number, y: number, width: number) => {
     ctx.beginPath()
     ctx.moveTo(x, y)
-    ctx.lineTo(x, settings.team === "orange" ? window.innerHeight : 0)
+    ctx.lineTo(
+      x,
+      settings.team === "orange" || settings.team === "purple"
+        ? window.innerHeight
+        : 0
+    )
     ctx.strokeStyle = settings.team
     ctx.lineWidth = width
     ctx.stroke()
@@ -186,7 +191,7 @@ const Overlay = () => {
           width += 2
           if (width >= 45) {
             clearInterval(growTimer)
-            if (settings.team === "orange") {
+            if (settings.team === "orange" || settings.team === "purple") {
               killFirstInSight(x - 30, y, x, window.innerHeight)
               ctx.clearRect(x - 30, y, x, window.innerHeight)
             } else {
