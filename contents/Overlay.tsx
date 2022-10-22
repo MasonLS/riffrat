@@ -114,24 +114,17 @@ const Overlay = () => {
               const canvas = canvasRef.current as HTMLCanvasElement
               const ctx = canvas.getContext("2d")
               const rect = canvas.getBoundingClientRect()
-              let x = cursor.current[0] - rect.left
-              let y = cursor.current[1] - rect.top
+              let x = payload.payload.x - rect.left
+              let y = payload.payload.y - rect.top
               let width = 1
-              ;(async () => {
-                channel?.send({
-                  type: "broadcast",
-                  event: "laser",
-                  payload: { id: settings.key, team: settings.team, x, y }
-                })
-              })()
               const growTimer = setInterval(() => {
-                if (width < 15) draw(ctx, x, y, width, settings.team)
+                if (width < 15) draw(ctx, x, y, width, payload.payload.team)
                 width += 2
                 if (width >= 45) {
                   clearInterval(growTimer)
                   if (
-                    settings.team === "orange" ||
-                    settings.team === "purple"
+                    payload.payload.team === "orange" ||
+                    payload.payload.team === "purple"
                   ) {
                     ctx.clearRect(x - 10, y + 20, 20, window.innerHeight)
                   } else {
@@ -196,11 +189,11 @@ const Overlay = () => {
   const killFirstInSight = useCallback(
     (x1, y1, width, height) => {
       let playerKilled
-      const hitbox = 65
+      const hitbox = 40
       for (const player of players.filter((p) => p.team !== settings.team)) {
         if (
           player.mouseX >= x1 - hitbox &&
-          player.mouseX <= width + hitbox &&
+          player.mouseX <= x1 + width + hitbox &&
           player.mouseY >= Math.min(y1, height) - hitbox &&
           player.mouseY <= Math.max(y1, height) + hitbox
         ) {
@@ -220,7 +213,7 @@ const Overlay = () => {
   )
 
   const keydown = useCallback(() => {
-    if (active && Date.now() - lastClicked.current > 1200) {
+    if (active && Date.now() - lastClicked.current > 200) {
       lastClicked.current = Date.now()
       const canvas = canvasRef.current as HTMLCanvasElement
       const ctx = canvas.getContext("2d")
@@ -263,6 +256,7 @@ const Overlay = () => {
         keydown()
       }
     }
+    document.body.style.overflow = active ? "hidden" : "auto"
   }, [active, settings])
 
   const calculateWinner = useCallback(() => {
