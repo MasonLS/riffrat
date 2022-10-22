@@ -24,7 +24,6 @@ const Overlay = () => {
   useEffect(() => {
     chrome.runtime.onMessage.addListener((msgObj) => {
       setActive(msgObj.active)
-      console.log(msgObj.active)
       setDead(false)
       if (msgObj.active) {
         const settings = {
@@ -110,7 +109,6 @@ const Overlay = () => {
             })
 
             channel.on("broadcast", { event: "laser" }, (payload) => {
-              if (payload.payload.id === settings.key) return
               const canvas = canvasRef.current as HTMLCanvasElement
               const ctx = canvas.getContext("2d")
               const rect = canvas.getBoundingClientRect()
@@ -189,7 +187,7 @@ const Overlay = () => {
   const killFirstInSight = useCallback(
     (x1, y1, width, height) => {
       let playerKilled
-      const hitbox = 40
+      const hitbox = 20
       for (const player of players.filter((p) => p.team !== settings.team)) {
         if (
           player.mouseX >= x1 - hitbox &&
@@ -207,6 +205,9 @@ const Overlay = () => {
           event: "death",
           payload: { id: playerKilled.key }
         })
+        setPlayers((players) =>
+          players.filter((p) => p.key !== playerKilled.key)
+        )
       }
     },
     [settings, players, channel]
@@ -257,7 +258,7 @@ const Overlay = () => {
       }
     }
     document.body.style.overflow = active ? "hidden" : "auto"
-  }, [active, settings])
+  }, [active, settings, players])
 
   const calculateWinner = useCallback(() => {
     let winnerTeam
