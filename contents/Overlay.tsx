@@ -1,5 +1,5 @@
-import { uniq } from "lodash"
-import { useEffect, useState } from "react"
+import { uniqBy } from "lodash"
+import { useEffect, useLayoutEffect, useState } from "react"
 
 import Spaceship from "../components/Spaceship"
 import client from "../core/store"
@@ -30,7 +30,7 @@ const Overlay = () => {
         // Subscribe registers your client with the server
         channel.subscribe(async (status) => {
           if (status === "SUBSCRIBED") {
-            await channel.track({
+            channel.track({
               team: settings.team,
               ship: settings.ship,
               playerID: settings.playerID
@@ -51,24 +51,27 @@ const Overlay = () => {
               }
             }
 
-            channel.on("presence", { event: "sync" }, () => {
-              console.log(
-                "Online users: ",
-                JSON.stringify(channel.presenceState())
-              )
-              const state = channel.presenceState()
-              const keys = uniq(Object.keys(state))
-              const players = keys.reduce(
-                (acc, key) => acc.concat(state[key]),
-                []
-              )
-              setPlayers(players)
-            })
+            channel
+              .on("presence", { event: "sync" }, () => {
+                console.log(
+                  "Online users: ",
+                  JSON.stringify(channel.presenceState())
+                )
+                const state = channel.presenceState()
+                const players = uniqBy(Object.values(state).flat(), "key")
+                console.log("PLAYERS ", players)
+                setPlayers(players)
+              })
+              .subscribe()
           }
         })
       }
     })
   }, [])
+
+  useLayoutEffect(() => {
+    document.body.style.cursor = active ? "none" : "auto"
+  }, [active])
 
   return (
     <div>
