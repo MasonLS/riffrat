@@ -1,4 +1,4 @@
-import { add, uniqBy } from "lodash"
+import { add, invert, uniqBy } from "lodash"
 import {
   useCallback,
   useEffect,
@@ -22,10 +22,148 @@ const Overlay = () => {
   const lastClicked = useRef<number>(0)
   const canvasRef = useRef<HTMLCanvasElement>()
   const cursor = useRef<number[]>()
+  const counterRef = useRef<HTMLElement>()
+
+  useEffect(() => {
+    if (localStorage.getItem("active") === "true") {
+      setActive(true)
+      setDead(false)
+      const settings = {
+        key: localStorage.getItem("id"),
+        ship: parseInt(localStorage.getItem("ship")),
+        team: localStorage.getItem("team")
+      }
+      setSettings(settings)
+
+      const channel = client.channel(window.location.href, {
+        config: {
+          presence: {
+            key: settings.key
+          },
+          broadcast: {
+            self: false
+          }
+        }
+      })
+      setChannel(channel)
+
+      // Subscribe registers your client with the server
+      channel.subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          channel.track({
+            team: settings.team,
+            ship: settings.ship,
+            key: settings.key,
+            updated_at: Date.now()
+          })
+
+          window.ondrag = (ev: MouseEvent) => {
+            ev.preventDefault()
+          }
+
+          window.onmousemove = (ev: MouseEvent) => {
+            const x = ev.pageX
+            const y = ev.pageY
+
+            channel.send({
+              type: "broadcast",
+              event: "cursor-pos",
+              payload: { id: settings.key, x, y }
+            })
+            setPlayers((players) =>
+              players.map((p) =>
+                p.key === settings.key
+                  ? {
+                      ...p,
+                      mouseX: x,
+                      mouseY: y
+                    }
+                  : p
+              )
+            )
+            cursor.current = [x, y]
+          }
+
+          channel.on("broadcast", { event: "cursor-pos" }, (payload) => {
+            setPlayers((players) => {
+              return players.map((p) =>
+                p.key === payload.payload.id
+                  ? {
+                      ...p,
+                      mouseX: payload.payload.x,
+                      mouseY: payload.payload.y
+                    }
+                  : p
+              )
+            })
+          })
+
+          channel.on("broadcast", { event: "death" }, (payload) => {
+            if (payload.payload.id === settings.key) {
+              setDead(true)
+              setActive(false)
+            }
+            setPlayers((players) => {
+              return players.filter((p) => p.key !== payload.payload.id)
+            })
+          })
+
+          channel.on("broadcast", { event: "laser" }, (payload) => {
+            const canvas = canvasRef.current as HTMLCanvasElement
+            const ctx = canvas.getContext("2d")
+            const rect = canvas.getBoundingClientRect()
+            let x = payload.payload.x - rect.left
+            let y = payload.payload.y - rect.top
+            let width = 1
+            const growTimer = setInterval(() => {
+              if (width < 15) draw(ctx, x, y, width, payload.payload.team)
+              width += 2
+              if (width >= 45) {
+                clearInterval(growTimer)
+                if (
+                  payload.payload.team === "orange" ||
+                  payload.payload.team === "purple"
+                ) {
+                  ctx.clearRect(x - 10, y + 20, 20, window.innerHeight)
+                } else {
+                  ctx.clearRect(x - 10, 0, 20, y + 20)
+                }
+              }
+            }, 10)
+          })
+
+          channel.on("presence", { event: "sync" }, () => {
+            const state = channel.presenceState()
+            const addPlayers = new Map<string, any>()
+            const presenceArray = Object.values(state).flat()
+            presenceArray.forEach((presence) => {
+              if (presence.updated_at)
+                if (
+                  addPlayers.has(presence.key || presence.playerID) &&
+                  !addPlayers.get(presence.key || presence.playerID)
+                    .updated_at &&
+                  addPlayers.get(presence.key || presence.playerID).updated_at <
+                    presence.updated_at
+                ) {
+                  addPlayers.set(presence.key, presence)
+                } else if (!addPlayers.has(presence.key || presence.playerID)) {
+                  addPlayers.set(presence.key, presence)
+                }
+            })
+            setPlayers(Array.from(addPlayers.values()))
+          })
+        }
+      })
+    }
+  }, [])
 
   useEffect(() => {
     chrome.runtime.onMessage.addListener((msgObj) => {
       setActive(msgObj.active)
+      localStorage.setItem("active", String(msgObj.active))
+      if (msgObj.active) localStorage.setItem("id", msgObj.id)
+      localStorage.setItem("ship", "" + msgObj.ship)
+      localStorage.setItem("team", msgObj.team)
       setDead(false)
       if (msgObj.active) {
         const settings = {
@@ -48,7 +186,7 @@ const Overlay = () => {
         setChannel(channel)
 
         // Subscribe registers your client with the server
-        channel.subscribe(async (status, err) => {
+        channel.subscribe(async (status) => {
           if (status === "SUBSCRIBED") {
             channel.track({
               team: settings.team,
@@ -311,6 +449,23 @@ const Overlay = () => {
     }
   }, [])
 
+  useEffect(() => {
+    if (dead) {
+      const interval = setInterval(() => {
+        if (counterRef) {
+          console.log(counterRef.current.innerHTML)
+          const time = parseInt(counterRef.current.innerHTML)
+          if (time <= 1) {
+            clearInterval(interval)
+            window.location.reload()
+          } else {
+            counterRef.current.innerHTML = (time - 1).toString()
+          }
+        }
+      }, 1000)
+    }
+  }, [dead])
+
   return (
     <>
       {dead && (
@@ -336,9 +491,17 @@ const Overlay = () => {
               fontSize: 30,
               textAlign: "center"
             }}>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              You died!
-            </div>
+            <>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                You died!
+                <br />
+                <br />
+                Respawning in{" "}
+                <span ref={counterRef} id="time-counter">
+                  5
+                </span>
+              </div>
+            </>
           </div>
         </div>
       )}
@@ -350,6 +513,7 @@ const Overlay = () => {
           width={window.innerWidth}
           style={{
             flex: 1,
+            zIndex: 9,
             display: "block",
             backgroundColor: "rgba(" + getBGColor(winnerTeam) + ",0.5)",
             height: "100vh",
